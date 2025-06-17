@@ -25,11 +25,11 @@ CIL is tested with the following required dependencies
   
 The following dependencies are optional
 - astra-toolbox enables CIL support for [ASTRA toolbox](http://www.astra-toolbox.com) CPU projector (2D Parallel beam only) and GPU projectors (GPLv3 license)
-- `tigre` (requires an NVIDIA GPU) enables support for [TIGRE](https://github.com/CERN/TIGRE) toolbox projectors (BSD license)
-- `ccpi-regulariser` is the [CCPi Regularisation Toolkit](https://github.com/TomographicImaging/CCPi-Regularisation-Toolkit)
-- `tomophantom` can generate phantoms to use as test data [Tomophantom](https://github.com/dkazanc/TomoPhantom)
-- `ipykernel`  provides the IPython kernel for Jupyter (allowing jupyter notebooks to be run)
-- `ipywidgets` enables visulisation tools within jupyter noteboooks
+- tigre (requires an NVIDIA GPU) enables support for [TIGRE](https://github.com/CERN/TIGRE) toolbox projectors (BSD license)
+- ccpi-regulariser is the [CCPi Regularisation Toolkit](https://github.com/TomographicImaging/CCPi-Regularisation-Toolkit)
+- tomophantom can generate phantoms to use as test data [Tomophantom](https://github.com/dkazanc/TomoPhantom)
+- ipykernel  provides the IPython kernel for Jupyter (allowing jupyter notebooks to be run)
+- ipywidgets enables visulisation tools within jupyter noteboooks
 
 ## Getting Started with CIL
 
