@@ -4,11 +4,18 @@ import os
 import re
 import shutil
 
-folders = ['demos', 'how-to']
-skip_notebooks = ['demos/2_Iterative/04_SPDHG.ipynb'
+folders = ['../CIL-Demos/demos', '../CIL-Demos/how-to']
+skip_notebooks = ['../CIL-Demos/demos/2_Iterative/04_SPDHG.ipynb'
 ]
 
-def run_tmp_notebook(notebook_path):    
+def run_tmp_notebook(notebook_path):  
+    import sys
+    import os
+
+    print("sys.executable:", sys.executable)
+    print("LD_LIBRARY_PATH:", os.environ.get("LD_LIBRARY_PATH"))
+    print("PATH:", os.environ.get("PATH"))
+
     tmp_notebook_path = notebook_path.replace('.ipynb', '_tmp.ipynb')
     shutil.copy(notebook_path, tmp_notebook_path)
 
@@ -41,7 +48,14 @@ def run_tmp_notebook(notebook_path):
         nbformat.write(notebook, f)
 
     print(f"\t\t Testing notebook: {tmp_notebook_path}")
-    pytest.main([tmp_notebook_path])
+    pytest.main([
+        "--nbmake",
+        "--nbmake-kernel=cil",
+        "--nbmake-timeout=900",
+        "--rootdir", os.path.abspath(os.path.dirname(tmp_notebook_path)),
+        os.path.abspath(tmp_notebook_path)
+    ])
+
 
     os.remove(tmp_notebook_path)
 
@@ -61,4 +75,3 @@ def test_notebook_runs():
                     print(f"\t\t Skipping notebook: {notebook_path}")
                 else:
                     run_tmp_notebook(notebook_path)
-                
