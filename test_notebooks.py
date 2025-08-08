@@ -3,18 +3,13 @@ import nbformat
 import os
 import re
 import shutil
+import subprocess
 
 folders = ['../CIL-Demos/demos', '../CIL-Demos/how-to']
 skip_notebooks = ['../CIL-Demos/demos/2_Iterative/04_SPDHG.ipynb'
 ]
 
 def run_tmp_notebook(notebook_path):  
-    import sys
-    import os
-
-    print("sys.executable:", sys.executable)
-    print("LD_LIBRARY_PATH:", os.environ.get("LD_LIBRARY_PATH"))
-    print("PATH:", os.environ.get("PATH"))
 
     tmp_notebook_path = notebook_path.replace('.ipynb', '_tmp.ipynb')
     shutil.copy(notebook_path, tmp_notebook_path)
@@ -48,14 +43,34 @@ def run_tmp_notebook(notebook_path):
         nbformat.write(notebook, f)
 
     print(f"\t\t Testing notebook: {tmp_notebook_path}")
+    log_file_path = os.path.abspath("notebook_test_output.log")
     pytest.main([
         "--nbmake",
         "--nbmake-kernel=cil",
         "--nbmake-timeout=900",
+        "--overwrite",  
         "--rootdir", os.path.abspath(os.path.dirname(tmp_notebook_path)),
-        os.path.abspath(tmp_notebook_path)
+        os.path.abspath(tmp_notebook_path),
+        "--capture=tee-sys",  
+        f"--log-file={log_file_path}",
+        "--log-file-level=INFO",
+        "-W", "error"  # Treat warnings as errors
+
     ])
 
+    
+    try:
+        subprocess.run([
+            "jupyter", "nbconvert",
+            "--to", "html",
+            "--output-dir", os.path.dirname(notebook_path),
+            "--output", os.path.basename(notebook_path).replace('.ipynb', '.html'),
+            tmp_notebook_path
+        ], check=True)
+
+        print(f"Successfully converted to HTML: {notebook_path.replace('.ipynb', '.html')}")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to convert {tmp_notebook_path} to HTML. Error: {e}")
 
     os.remove(tmp_notebook_path)
 
