@@ -1,4 +1,4 @@
-name: cil_demos2
+name: cil_demos
 channels:
   - conda-forge
   - https://software.repos.intel.com/python/conda
