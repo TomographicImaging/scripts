@@ -6,17 +6,18 @@ import shutil
 import subprocess
 from datetime import datetime
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-CIL_DEMOS_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, '../CIL-Demos'))
-PDF_OUTPUT_DIR = os.path.join(SCRIPT_DIR, 'pdf_outputs')
+DATA_PATH = '/mnt/share/materials/SIRF/Fully3D/CIL/'                        # specify where the notebook data is
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))                     # specify where this script is
+CIL_DEMOS_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, '../CIL-Demos'))   # specify where the CIL-Demos are in relation to this script
+PDF_OUTPUT_DIR = os.path.join(SCRIPT_DIR, 'pdf_outputs')                    # specify where you want the pdf outputs to go
 os.makedirs(PDF_OUTPUT_DIR, exist_ok=True)
+
+folders = [                                                                 # specify which folders you want to test
+    os.path.join(CIL_DEMOS_DIR, 'demos'),
+    os.path.join(CIL_DEMOS_DIR, 'how-to') ]
 
 LOG_NAME = "test_notebooks_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".log"
 
-folders = [
-    os.path.join(CIL_DEMOS_DIR, 'demos'),
-    os.path.join(CIL_DEMOS_DIR, 'how-to')
-]
 
 def preprocess_notebook(original_path):
     """Copy a notebook to _tmp and apply preprocessing."""
@@ -26,9 +27,14 @@ def preprocess_notebook(original_path):
     with open(tmp_path, 'r') as f:
         notebook = nbformat.read(f, as_version=4)
 
+    warning_cell = nbformat.v4.new_code_cell(
+        source="import warnings\nwarnings.simplefilter('error', RuntimeWarning)"
+        )
+    notebook.cells.insert(0, warning_cell)
+
     for cell in notebook.cells:
         if cell.cell_type == 'code':
-            cell.source = re.sub(r'/mnt/materials/', '/mnt/share/materials/', cell.source)
+            cell.source = re.sub(r'/mnt/materials/SIRF/Fully3D/CIL/', DATA_PATH, cell.source)
             if '# %load' in cell.source:
                 try:
                     snippet_file = cell.source.split('snippets/')[1].split('\'')[0]
