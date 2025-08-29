@@ -1,0 +1,43 @@
+name: cil_test_demos
+channels:
+  - conda-forge
+  - nvidia
+  - https://software.repos.intel.com/python/conda
+dependencies:
+  # base (vis. recipe/conda_build_config.yaml)
+  - python >=3.10,<3.13
+  - numpy >=1.23,<2
+  - libgomp      # [linux]
+  - ccpi::cil=24.3.0
+  - ccpi::cil-data >=22
+  - ccpi::tigre 2.6
+  - ccpi::ccpi-regulariser 24.0.1
+  - ccpi::tomophantom 2.0.0
+  - astra-toolbox 2.1 cuda*
+  - cvxpy
+  - python-wget
+  - ipykernel 
+  - scikit-image
+  - packaging
+  - cmake >=3.16
+  - setuptools >=64
+  - ipp-include 2021.12
+  - ipp-devel 2021.12
+  - ipp 2021.12
+  - ipywidgets
+  - scipy >=1.4
+  - matplotlib-base >=3.3
+  - h5py
+  - pillow
+  - dxchange
+  - olefile >=0.46
+  - pywavelets
+  - numba
+  - tqdm
+  - zenodo_get >=1.6
+  - pytest
+  - nbmake
+  - tectonic
+  - pip
+  - pip:
+    - unittest-parametrize
