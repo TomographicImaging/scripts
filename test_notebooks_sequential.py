@@ -1,5 +1,3 @@
-# conda install pytest tectonic nbformat nbmake nbconvert
-
 import pytest
 import nbformat
 import os
@@ -8,22 +6,33 @@ import shutil
 import subprocess
 from datetime import datetime
 
-DATA_PATH = '/mnt/share/materials/SIRF/Fully3D/CIL/'                        # specify where the notebook data is
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))                     # specify where this script is
-CIL_DEMOS_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, '../CIL-Demos'))   # specify where the CIL-Demos are in relation to this script
-PDF_OUTPUT_DIR = os.path.join(SCRIPT_DIR, 'html_outputs')                    # specify where you want the pdf outputs to go
+DATA_PATH = '/mnt/share/materials/SIRF/Fully3D/CIL/'
+DATA_PATH_ALT = '/mnt/share/materials/CIL/'
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+CIL_DEMOS_DIR = os.path.expanduser(os.path.join('~', 'CIL-Demos'))
+
+PDF_OUTPUT_DIR = os.path.join(SCRIPT_DIR, 'html_outputs')
+TMP_OUTPUT_DIR = os.path.join(SCRIPT_DIR, 'tmp_notebooks')
+
+os.makedirs(TMP_OUTPUT_DIR, exist_ok=True)
 os.makedirs(PDF_OUTPUT_DIR, exist_ok=True)
 
-folders = [                                                                 # specify which folders you want to test
+folders = [
     os.path.join(CIL_DEMOS_DIR, 'demos'),
-    os.path.join(CIL_DEMOS_DIR, 'how-to') ]
+    os.path.join(CIL_DEMOS_DIR, 'how-to')
+]
 
 LOG_NAME = "test_notebooks_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".log"
 
-
 def preprocess_notebook(original_path):
-    """Copy a notebook to _tmp and apply preprocessing."""
-    tmp_path = original_path.replace('.ipynb', '_tmp.ipynb')
+    rel_path = os.path.relpath(original_path, CIL_DEMOS_DIR)
+    rel_path = rel_path.replace("..", "_")
+    tmp_path = os.path.join(TMP_OUTPUT_DIR, rel_path)
+    tmp_dir = os.path.dirname(tmp_path)
+    os.makedirs(tmp_dir, exist_ok=True)
+    tmp_path = tmp_path.replace('.ipynb', '_tmp.ipynb')
+
     shutil.copy(original_path, tmp_path)
 
     with open(tmp_path, 'r') as f:
@@ -43,6 +52,7 @@ warnings.showwarning = warning_collector
     for cell in notebook.cells:
         if cell.cell_type == 'code':
             cell.source = re.sub(r'/mnt/materials/SIRF/Fully3D/CIL/', DATA_PATH, cell.source)
+            cell.source = re.sub(r'/mnt/materials/CIL/', DATA_PATH_ALT, cell.source)
             if '# %load' in cell.source:
                 try:
                     snippet_file = cell.source.split('snippets/')[1].split('\'')[0]
@@ -54,14 +64,15 @@ warnings.showwarning = warning_collector
                         log_file.write(f"Snippet load failed for {original_path}: {e}\n")
             if '...' in cell.source:
                 cell.source = ""
-    
+
     with open(tmp_path, 'w') as f:
         nbformat.write(notebook, f)
 
     return tmp_path
 
-def run_notebook_test(tmp_path, all_warnings):
-    """Run pytest for a single notebook and log output live."""
+def run_notebook_test(tmp_path, original_path, all_warnings):
+    original_folder = os.path.dirname(os.path.abspath(original_path))
+    tmp_abs_path = os.path.abspath(tmp_path)
     with open(LOG_NAME, "a") as log_file:
         result = subprocess.run(
             [
@@ -70,12 +81,13 @@ def run_notebook_test(tmp_path, all_warnings):
                 '--nbmake-kernel=cil_test_demos',
                 '--nbmake-timeout=900',
                 '--overwrite',
-                tmp_path
+                tmp_abs_path
             ],
-            cwd=CIL_DEMOS_DIR,
+            cwd=original_folder,
             stdout=log_file,
             stderr=subprocess.STDOUT,
-            text=True
+            text=True,
+            env={**os.environ, 'PYTHONPATH': original_folder}
         )
 
     try:
@@ -87,12 +99,10 @@ def run_notebook_test(tmp_path, all_warnings):
                 for out in cell.get('outputs', []):
                     if out.output_type == 'stream':
                         text = out.get('text', '')
-                        # Capture warnings emitted into notebook_warnings
                         for line in text.splitlines():
-                            if 'Warning' in line or 'Error' in line:  # basic filter
+                            if 'Warning' in line or 'Error' in line:
                                 all_warnings.setdefault(tmp_path, []).append(line)
 
-        # Log immediately after running this notebook
         if tmp_path in all_warnings:
             with open(LOG_NAME, "a") as log_file:
                 log_file.write(f"\n=== Warnings in {tmp_path} ===\n")
@@ -100,109 +110,75 @@ def run_notebook_test(tmp_path, all_warnings):
                     log_file.write(w + "\n")
 
     except Exception:
-        pass  
-    
+        pass
+
     return result.returncode == 0
 
 def convert_notebook_to_html(tmp_path):
-    """Convert a notebook to HTML and save in the same folder structure as PDF outputs."""
-    try:
-        parent_dir_name = os.path.basename(os.path.dirname(tmp_path))
-        subfolder_path = os.path.join(PDF_OUTPUT_DIR, parent_dir_name)
-        os.makedirs(subfolder_path, exist_ok=True)
-
-        html_output_path = os.path.join(
-            subfolder_path,
-            os.path.basename(tmp_path).replace('.ipynb', '.html')
-        )
-
-        subprocess.run(
-            [
-                'python', '-m', 'nbconvert',
-                '--to', 'html',
-                '--output', os.path.basename(html_output_path),
-                '--output-dir', subfolder_path,
-                tmp_path
-            ],
-            cwd=CIL_DEMOS_DIR,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=True
-        )
-
-        with open(LOG_NAME, "a") as log_file:
-            log_file.write(f"Saved HTML to: {html_output_path}\n")
-
-    except subprocess.CalledProcessError as e:
-        with open(LOG_NAME, "a") as log_file:
-            log_file.write(f"Failed to convert {tmp_path} to HTML: {e}\n")
+    parent_dir_name = os.path.basename(os.path.dirname(tmp_path))
+    subfolder_path = os.path.join(PDF_OUTPUT_DIR, parent_dir_name)
+    os.makedirs(subfolder_path, exist_ok=True)
+    html_output_path = os.path.join(subfolder_path, os.path.basename(tmp_path).replace('.ipynb', '.html'))
+    subprocess.run(
+        [
+            'jupyter', 'nbconvert',
+            '--to', 'html',
+            '--template', 'lab',
+            '--HTMLExporter.embed_mathjax=True',
+            '--HTMLExporter.mathjax_url=nbextensions/mathjax/MathJax.js?config=TeX-AMS_HTML',
+            '--output', os.path.basename(html_output_path),
+            '--output-dir', subfolder_path,
+            tmp_path
+        ],
+        cwd=os.path.dirname(tmp_path),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=True
+    )
+    with open(LOG_NAME, "a") as log_file:
+        log_file.write(f"Saved HTML to: {html_output_path}\n")
 
 def convert_notebook_to_pdf(tmp_path):
-    """
-    Convert a notebook to PDF and save
-    Note: this fails for a lot of our rendered markdown maths, save html instead
-    """
-    try:
-        subprocess.run(
-            ['jupyter', 'nbconvert', '--to', 'latex', tmp_path],
-            cwd=CIL_DEMOS_DIR,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=True
-        )
-
-        tex_file = tmp_path.replace('.ipynb', '.tex')
-
-        parent_dir_name = os.path.basename(os.path.dirname(tmp_path))
-        subfolder_path = os.path.join(PDF_OUTPUT_DIR, parent_dir_name)
-        os.makedirs(subfolder_path, exist_ok=True)
-
-        subprocess.run(
-            ['tectonic', tex_file, '--print', '--outdir', subfolder_path],
-            cwd=CIL_DEMOS_DIR,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            check=True
-        )
-
-        pdf_name = os.path.basename(tex_file).replace('.tex', '.pdf')
-        subfolder_pdf_path = os.path.join(subfolder_path, pdf_name)
-
-        with open(LOG_NAME, "a") as log_file:
-            log_file.write(f"Saved PDF to: {subfolder_pdf_path}\n")
-
-    except subprocess.CalledProcessError as e:
-        with open(LOG_NAME, "a") as log_file:
-            log_file.write(f"Failed to convert {tmp_path} to PDF: {e}\n")
-
+    subprocess.run(
+        ['jupyter', 'nbconvert', '--to', 'latex', tmp_path],
+        cwd=os.path.dirname(tmp_path),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=True
+    )
+    tex_file = tmp_path.replace('.ipynb', '.tex')
+    parent_dir_name = os.path.basename(os.path.dirname(tmp_path))
+    subfolder_path = os.path.join(PDF_OUTPUT_DIR, parent_dir_name)
+    os.makedirs(subfolder_path, exist_ok=True)
+    subprocess.run(
+        ['tectonic', tex_file, '--print', '--outdir', subfolder_path],
+        cwd=os.path.dirname(tmp_path),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=True
+    )
+    pdf_name = os.path.basename(tex_file).replace('.tex', '.pdf')
+    subfolder_pdf_path = os.path.join(subfolder_path, pdf_name)
+    with open(LOG_NAME, "a") as log_file:
+        log_file.write(f"Saved PDF to: {subfolder_pdf_path}\n")
 
 def cleanup_notebook_files(tmp_path):
-    """Delete tmp notebook, tex files, and any _files directories."""
-    with open(LOG_NAME, "a") as log_file:
-        # Remove _tmp.ipynb
+    try:
+        os.remove(tmp_path)
+    except Exception:
+        pass
+    tex_file = tmp_path.replace('.ipynb', '.tex')
+    if os.path.exists(tex_file):
         try:
-            os.remove(tmp_path)
-            log_file.write(f"Deleted: {tmp_path}\n")
-        except Exception as e:
-            log_file.write(f"Failed to delete {tmp_path}: {e}\n")
-
-        # Remove tex file
-        tex_file = tmp_path.replace('.ipynb', '.tex')
-        if os.path.exists(tex_file):
-            try:
-                os.remove(tex_file)
-                log_file.write(f"Deleted: {tex_file}\n")
-            except Exception as e:
-                log_file.write(f"Failed to delete {tex_file}: {e}\n")
-
-        # Remove _files directory
-        files_dir = tmp_path.replace('.ipynb', '_files')
-        if os.path.exists(files_dir):
-            try:
-                shutil.rmtree(files_dir)
-                log_file.write(f"Deleted folder: {files_dir}\n")
-            except Exception as e:
-                log_file.write(f"Failed to delete folder {files_dir}: {e}\n")
+            os.remove(tex_file)
+        except Exception:
+            pass
+    files_dir = tmp_path.replace('.ipynb', '_files')
+    if os.path.exists(files_dir):
+        try:
+            shutil.rmtree(files_dir)
+        except Exception:
+            pass
 
 def main():
     results = {}
@@ -212,13 +188,20 @@ def main():
             for file in files:
                 if file.endswith('.ipynb') and not file.endswith('_tmp.ipynb'):
                     original_path = os.path.join(root, file)
+                    rel_path = os.path.relpath(original_path, CIL_DEMOS_DIR)
+                    rel_path = rel_path.replace("..", "_")
+                    tmp_path = os.path.join(TMP_OUTPUT_DIR, rel_path).replace('.ipynb', '_tmp.ipynb')
+
+                    if os.path.exists(tmp_path):
+                        with open(LOG_NAME, "a") as log_file:
+                            log_file.write(f"Skipping (tmp exists): {original_path}\n")
+                        continue
+
                     with open(LOG_NAME, "a") as log_file:
                         log_file.write(f"\n=== Processing notebook: {original_path} ===\n")
                     tmp_path = preprocess_notebook(original_path)
-                    passed = run_notebook_test(tmp_path, all_warnings)
+                    passed = run_notebook_test(tmp_path, original_path, all_warnings)
                     results[original_path] = 'passed' if passed else 'failed'
-                    convert_notebook_to_html(tmp_path)
-                    cleanup_notebook_files(tmp_path)
 
     with open(LOG_NAME, "a") as log_file:
         log_file.write("\n======== Notebook Test Summary =========\n")
