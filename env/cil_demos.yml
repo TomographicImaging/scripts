@@ -16,3 +16,4 @@ dependencies:
   - matplotlib-base >=3.3.0
   - dxchange
   - olefile >=0.46
+  - jupyter
