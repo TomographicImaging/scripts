@@ -16,4 +16,4 @@ dependencies:
   - dxchange
   - olefile >=0.46
   - jupyter
-
+  - zenodo_get >=1.6
