@@ -12,7 +12,7 @@ dependencies:
   - ccpi::tomophantom=2.0.0
   - scikit-image
   - matplotlib-base >=3.3.0
-  - dxchange
+  - dxchange >=0.2.1
   - olefile >=0.46
   - cvxpy
   - zenodo_get >=1.6
