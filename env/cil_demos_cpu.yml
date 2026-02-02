@@ -9,11 +9,11 @@ dependencies:
   - conda-forge::astra-toolbox=2.1=py*
   - ccpi::ccpi-regulariser=24.0.1
   - ccpi::tomophantom=2.0.0
-  - ipykernel 
-  - ipywidgets 
+  - ipykernel
+  - ipywidgets
   - scikit-image
   - matplotlib-base >=3.3.0
-  - dxchange
+  - dxchange >=0.2.1
   - olefile >=0.46
   - jupyter
   - zenodo_get >=1.6
