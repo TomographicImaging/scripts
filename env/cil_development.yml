@@ -9,6 +9,9 @@ dependencies:
   - scipy
   - numba
   - llvm-openmp
+  - ipp-include 2021.12
+  - ipp-devel 2021.12
+  - ipp 2021.12
   - matplotlib-base >=3.3.0
   - astra-toolbox=2.1=cuda*
   - scikit-image
@@ -27,6 +30,7 @@ dependencies:
   - python-wget
   - zenodo_get >=1.6
   - packaging
+  - ipywidgets
   - pip:
     - unittest-parametrize
     
