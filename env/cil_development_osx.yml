@@ -1,4 +1,4 @@
-name: cil_test
+name: cil_devel
 channels:
   - conda-forge
   - https://software.repos.intel.com/python/conda
