@@ -10,7 +10,7 @@ DATA_PATH = '/mnt/share/materials/SIRF/Fully3D/CIL/'
 DATA_PATH_ALT = '/mnt/share/materials/CIL/'
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-CIL_DEMOS_DIR = os.path.expanduser(os.path.join('~', 'CIL-Demos'))
+CIL_DEMOS_DIR = os.path.expanduser("/home/lhe97136/CIL-Demos")
 
 PDF_OUTPUT_DIR = os.path.join(SCRIPT_DIR, 'html_outputs')
 TMP_OUTPUT_DIR = os.path.join(SCRIPT_DIR, 'tmp_notebooks')
@@ -25,15 +25,42 @@ folders = [
 
 LOG_NAME = "test_notebooks_" + datetime.now().strftime("%Y%m%d_%H%M%S") + ".log"
 
-def preprocess_notebook(original_path):
-    rel_path = os.path.relpath(original_path, CIL_DEMOS_DIR)
-    rel_path = rel_path.replace("..", "_")
-    tmp_path = os.path.join(TMP_OUTPUT_DIR, rel_path)
-    tmp_dir = os.path.dirname(tmp_path)
-    os.makedirs(tmp_dir, exist_ok=True)
-    tmp_path = tmp_path.replace('.ipynb', '_tmp.ipynb')
+def copy_all_files():
+    """
+    Copy all *.ipynb and *.py files from `folders` into TMP_OUTPUT_DIR,
+    preserving relative directory structure.
+    Renames any *.ipynb files to *_tmp.ipynb
 
-    shutil.copy(original_path, tmp_path)
+    Returns a list of tuples: (original_path, copied_path) for all notebooks.
+    """
+    notebook_paths = []
+    for folder in folders:
+        for root, _, files in os.walk(folder):
+            for file in files:
+                if file.endswith('.ipynb') or file.endswith('.py'):
+                    original_path = os.path.join(root, file)
+
+                    rel_path = os.path.relpath(original_path, CIL_DEMOS_DIR)
+                    rel_path = rel_path.replace("..", "_")
+                    tmp_path = os.path.join(TMP_OUTPUT_DIR, rel_path)
+                    tmp_dir = os.path.dirname(tmp_path)
+                    os.makedirs(tmp_dir, exist_ok=True)
+                    if file.endswith('.ipynb') and not file.endswith('_tmp.ipynb'):
+                        tmp_path = tmp_path.replace('.ipynb', '_tmp.ipynb')
+                        if os.path.exists(tmp_path):
+                            with open(LOG_NAME, "a") as log_file:
+                                log_file.write(f"Skipping (tmp exists): {original_path}\n")
+
+                    if not os.path.exists(tmp_path):
+                        shutil.copy(original_path, tmp_path)
+
+                        if file.endswith('.ipynb'):
+                            notebook_paths.append((original_path, tmp_path))
+    return notebook_paths
+
+
+
+def preprocess_notebook(original_path, tmp_path):
 
     with open(tmp_path, 'r') as f:
         notebook = nbformat.read(f, as_version=4)
@@ -183,25 +210,19 @@ def cleanup_notebook_files(tmp_path):
 def main():
     results = {}
     all_warnings = {}
-    for folder in folders:
-        for root, _, files in os.walk(folder):
-            for file in files:
-                if file.endswith('.ipynb') and not file.endswith('_tmp.ipynb'):
-                    original_path = os.path.join(root, file)
-                    rel_path = os.path.relpath(original_path, CIL_DEMOS_DIR)
-                    rel_path = rel_path.replace("..", "_")
-                    tmp_path = os.path.join(TMP_OUTPUT_DIR, rel_path).replace('.ipynb', '_tmp.ipynb')
+    with open(LOG_NAME, "a") as log:
+        log.write("=== Copying Files ===\n")
 
-                    if os.path.exists(tmp_path):
-                        with open(LOG_NAME, "a") as log_file:
-                            log_file.write(f"Skipping (tmp exists): {original_path}\n")
-                        continue
+    notebooks = copy_all_files()
 
-                    with open(LOG_NAME, "a") as log_file:
-                        log_file.write(f"\n=== Processing notebook: {original_path} ===\n")
-                    tmp_path = preprocess_notebook(original_path)
-                    passed = run_notebook_test(tmp_path, original_path, all_warnings)
-                    results[original_path] = 'passed' if passed else 'failed'
+    for original_path, copied_path in notebooks:
+
+
+        with open(LOG_NAME, "a") as log_file:
+            log_file.write(f"\n=== Processing notebook: {original_path} ===\n")
+        tmp_path = preprocess_notebook(original_path, copied_path)
+        passed = run_notebook_test(tmp_path, original_path, all_warnings)
+        results[original_path] = 'passed' if passed else 'failed'
 
     with open(LOG_NAME, "a") as log_file:
         log_file.write("\n======== Notebook Test Summary =========\n")
