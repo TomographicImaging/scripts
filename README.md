@@ -42,7 +42,7 @@ To use it:
     ```sh
     jupyter kernelspec list
     ```
-If there is a kernel with name `cil_test_demos` then move to step 9. If not, run:
+    If there is a kernel with name `cil_test_demos` then move to step 9. If not, run:
     ```sh
     python -m ipykernel install --user --name cil_test_demos --display-name "cil_test_demos"
     ```
