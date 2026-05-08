@@ -50,10 +50,13 @@ To use it:
     `CIL_DEMOS_DIR` - should point to your clone of CIL-Demos
     `DATA_PATH` and `DATA_PATH_ALT` should point to directories where the CIL-Demos data is saved.
 10. Run `test_notebooks_sequential.py`. This is likely to take quite a long time. It will create the following inside the `scripts` directory:
+
     `test_notebooks_*.log` log file (with name including date and time of run)
         This shows which notebooks have run and whether they have passed or failed.
+
     `tmp_notebooks` directory
         This contains the run and rendered `.ipynb` notebook files.
+        
     `html_outputs` directory
         This contains run and rendered notebooks as `html` files.
 
