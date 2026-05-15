@@ -10,7 +10,7 @@ DATA_PATH = '/mnt/share/materials/SIRF/Fully3D/CIL/'
 DATA_PATH_ALT = '/mnt/share/materials/CIL/'
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-CIL_DEMOS_DIR = os.path.expanduser("/home/lhe97136/CIL-Demos")
+CIL_DEMOS_DIR = os.path.expanduser(os.path.join('~', 'CIL-Demos'))
 
 PDF_OUTPUT_DIR = os.path.join(SCRIPT_DIR, 'html_outputs')
 TMP_OUTPUT_DIR = os.path.join(SCRIPT_DIR, 'tmp_notebooks')
