@@ -13,10 +13,12 @@ Static hosting:
 
 ### CIL
 `cil.yml` - for installing the latest release of CIL.
-`cil_test.yml` - for installing the latest 
+`cil_test.yml` - for installing the latest release of CIL with the requirements for running the tests.
 
 ### CILViewer
-`cilviewer_ui` - for installing the latest release of CILViewer, with 
+`cilviewer_ui` - for installing the latest release of CILViewer, with packages needed to run the GUI.
+
+
 ## Script for Testing CIL demos
 
 `test_notebooks_sequential.py` is a script for testing the CIL-Demos
