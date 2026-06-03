@@ -5,16 +5,15 @@ channels:
   - https://software.repos.intel.com/python/conda
 dependencies:
   # base (vis. recipe/conda_build_config.yaml)
-  - python >=3.10,<3.13
-  - numpy >=1.23,<2
+  - python >=3.10
+  - numpy >=1.23,<3
   - libgomp      # [linux]
-  - ccpi::cil=25.0.0
   - ccpi::cil-data >=22
-  - ccpi::tigre 2.6
-  - ccpi::ccpi-regulariser 24.0.1
-  - ccpi::tomophantom 2.0.0
-  - astra-toolbox 2.1 cuda*
-  - cvxpy
+  - ccpi::tigre 3.1.3
+  - ccpi::ccpi-regulariser 25.* cuda*
+  - httomo::tomophantom 3.1.4
+  - astra-toolbox::astra-toolbox 2.4
+  - cvxpy!=1.8.2
   - python-wget
   - ipykernel 
   - scikit-image
