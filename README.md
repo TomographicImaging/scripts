@@ -55,12 +55,8 @@ To use it:
     `DATA_PATH` and `DATA_PATH_ALT` should point to directories where the CIL-Demos data is saved.
 10. Run `test_notebooks_sequential.py`. This is likely to take quite a long time. It will create the following inside the current directory:
 
-     - `test_notebooks_*.log` log file (with name including date and time of run)
+    `test_notebooks_*.log` log file (with name including date and time of run): This shows which notebooks have run and whether they have passed or failed.
 
-        This shows which notebooks have run and whether they have passed or failed.
-
-    - `tmp_notebooks` directory
-
-        This contains the run and rendered `.ipynb` notebook files.
+    `tmp_notebooks` directory: This contains the run and rendered `.ipynb` notebook files.
     
 
