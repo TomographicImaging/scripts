@@ -9,10 +9,12 @@ Static hosting:
 
 ### CIL-Demos
 `cil_demos.yml` - for installing the latest release of CIL-Demos on a system with a GPU.
+
 `cil_demos_cpu.yml` - for installing the latest release of CIL-Demos on a system without a GPU.
 
 ### CIL
 `cil.yml` - for installing the latest release of CIL.
+
 `cil_test.yml` - for installing the latest release of CIL with the requirements for running the tests.
 
 ### CILViewer
@@ -51,14 +53,14 @@ To use it:
 9. At the top of the `test_notebooks_sequential.py` file, update these variables:
     `CIL_DEMOS_DIR` - should point to your clone of CIL-Demos
     `DATA_PATH` and `DATA_PATH_ALT` should point to directories where the CIL-Demos data is saved.
-10. Run `test_notebooks_sequential.py`. This is likely to take quite a long time. It will create the following inside the `scripts` directory:
+10. Run `test_notebooks_sequential.py`. This is likely to take quite a long time. It will create the following inside the current directory:
 
     `test_notebooks_*.log` log file (with name including date and time of run)
+
         This shows which notebooks have run and whether they have passed or failed.
 
     `tmp_notebooks` directory
+    
         This contains the run and rendered `.ipynb` notebook files.
-        
-    `html_outputs` directory
-        This contains run and rendered notebooks as `html` files.
+    
 
