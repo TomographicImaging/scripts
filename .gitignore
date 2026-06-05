@@ -1,0 +1,4 @@
+*.log
+html_outputs/
+tmp_notebooks/
+.vscode/
