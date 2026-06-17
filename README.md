@@ -12,10 +12,6 @@ Static hosting:
 
 `cil_demos_cpu.yml` - for installing the latest release of CIL-Demos on a system without a GPU.
 
-### CIL
-`cil.yml` - for installing the latest release of CIL.
-
-`cil_test.yml` - for installing the latest release of CIL with the requirements for running the tests.
 
 ### CILViewer
 `cilviewer_ui` - for installing the latest release of CILViewer, with packages needed to run the GUI.
